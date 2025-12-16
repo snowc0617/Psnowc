@@ -1,0 +1,36 @@
+---
+// src/components/Navigation.astro
+---
+<div class="nav-links">
+  <a href="/">首頁</a>
+  <a href="/jump">傳送門</a>
+  <a href="https://snowcnews.com/about">關於我們</a>
+</div>
+
+<style>
+  .nav-links {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  
+  .nav-links a {
+    color: #333; 
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-weight: bold;
+  }
+
+  .nav-links a:hover {
+    background-color: #4f39fa;
+    color: white;
+  }
+
+  /* 搜尋按鈕的專屬樣式：預設給它一個淡灰色背景 */
+  .search-link {
+    background-color: #f3f4f6;
+  }
+</style>

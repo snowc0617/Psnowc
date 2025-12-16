@@ -1,0 +1,55 @@
+---
+const today = new Date();
+---
+
+<footer>
+  <div class="footer-links">
+    <a href="/privacy">隱私權政策</a>
+    <span>|</span>
+    <a href="/contact">聯絡我們</a>
+  </div>
+  
+  <p>
+    &copy; {today.getFullYear()} SnowcNEWS.
+  </p>
+  
+  <div class="social-links">
+    <a href="https://discord.gg/AEGByhXpD3" target="_blank">Discord</a>
+    <a href="https://www.facebook.com/profile.php?id=61584846235675" target="_blank">Facebook</a>
+  </div>
+</footer>
+
+<style>
+  footer {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 3rem;
+    padding: 2rem;
+    text-align: center;
+    border-top: 1px solid #eee;
+    background-color: #f6f6f6;
+  }
+
+  .footer-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .footer-links a {
+    color: #555;
+    text-decoration: none;
+  }
+
+  .footer-links a:hover {
+    text-decoration: underline;
+  }
+
+  .social-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+</style>

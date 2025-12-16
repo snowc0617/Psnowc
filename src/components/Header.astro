@@ -1,0 +1,133 @@
+---
+// src/components/Header.astro
+import Navigation from './Navigation.astro';
+import Hamburger from './Hamburger.astro';
+// 引入圖片
+import logoImg from '../assets/logo.png';
+import { Image } from 'astro:assets';
+---
+<header>
+  <nav>
+    {/* 1. Logo 區域 */}
+    <a href="/" class="logo-link">
+      <Image src={logoImg} alt="SnowcNEWS Logo" class="logo-img" />
+    </a>
+
+    {/* 2. 選單區域 */}
+    <div class="nav-menu">
+      <Hamburger />
+      <Navigation />
+    </div>
+  </nav>
+</header>
+
+<style>
+  header {
+    background-color: #ffffff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 80px; 
+    padding: 0 1.5rem; 
+    max-width: 1200px;
+    margin: 0 auto;
+    /* 設為 relative 是為了讓手機版下拉選單可以根據它來定位 */
+    position: relative; 
+  }
+
+  .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    height: 100%;
+  }
+
+  .logo-img {
+    height: 50px; /* 手機版 Logo 稍微小一點 */
+    width: auto;
+    object-fit: contain;
+  }
+
+  /* --- ★★★ 手機版樣式 (預設) ★★★ --- */
+  
+  /* 針對 Navigation 元件裡的 .nav-links 進行樣式覆蓋 */
+  .nav-menu :global(.nav-links) {
+    display: none; /* 預設隱藏，點擊漢堡後會由 JS 加上 expanded 類別來顯示 */
+    
+    /* 絕對定位：讓選單像抽屜一樣掛在 Header 下方 */
+    position: absolute;
+    top: 80px; /* Header 的高度 */
+    left: 0;
+    width: 100%;
+    
+    /* 外觀設定：白色背景、垂直排列 */
+    background-color: #ffffff;
+    padding: 2rem;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.1); /* 下方陰影 */
+    border-top: 1px solid #f0f0f0;
+  }
+
+  /* 當 JavaScript 加上 expanded 類別時顯示 (展開狀態) */
+  .nav-menu :global(.nav-links.expanded) {
+    display: flex;
+  }
+
+  /* 手機版按鈕樣式：變成寬寬的長條按鈕 */
+  .nav-menu :global(.nav-links a) {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: #f3f4f6;
+    color: #333;
+    padding: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+
+  /* --- ★★★ 電腦版樣式 (螢幕寬度 > 636px) ★★★ --- */
+  @media screen and (min-width: 636px) {
+    
+    .logo-img { height: 60px; } /* 電腦版 Logo 大一點 */
+
+    /* 還原成橫向排列 */
+    .nav-menu :global(.nav-links) {
+      display: flex !important; /* 強制顯示 */
+      position: static; /* 取消絕對定位，回到正常的流動排版 */
+      width: auto;
+      background-color: transparent;
+      flex-direction: row; /* 改回橫向 */
+      padding: 0;
+      gap: 12px;
+      box-shadow: none;
+      border: none;
+    }
+
+    /* 電腦版按鈕樣式：維持之前的膠囊小按鈕 */
+    .nav-menu :global(.nav-links a) {
+      width: auto;
+      padding: 0.6rem 1.2rem;
+      font-size: 1rem;
+      background-color: #f3f4f6;
+      border: 1px solid #eee;
+    }
+
+    .nav-menu :global(.nav-links a:hover) {
+      background-color: #4f39fa;
+      color: white;
+      border-color: #4f39fa;
+      transform: translateY(-2px);
+    }
+  }
+</style>

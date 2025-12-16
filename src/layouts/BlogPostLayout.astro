@@ -1,0 +1,164 @@
+---
+// src/layouts/BlogPostLayout.astro
+import BaseLayout from './BaseLayout.astro';
+import RelatedPosts from '../components/RelatedPosts.astro';
+
+// ★★★ 新增：定義資料結構介面 (Interface)，解決 tag 紅字問題 ★★★
+interface Props {
+  frontmatter: {
+    title: string;
+    pubDate: string;
+    tags?: string[]; // 明確告訴程式 tags 是一個字串陣列
+    author?: string;
+    image?: any;
+    [key: string]: any; // 允許其他任意欄位
+  };
+  url: string;
+}
+
+const { frontmatter, url } = Astro.props;
+---
+
+<BaseLayout pageTitle={frontmatter.title} frontmatter={frontmatter}>
+  
+  <article class="blog-post-container">
+    
+    {/* 文章頭部：分類標籤、標題、日期 */}
+    <header class="post-header">
+      {/* 因為上面定義了 tags 是字串陣列，這裡的 tag 就知道是 string 了，不會再報紅字 */}
+      {frontmatter.tags && (
+        <div class="tags">
+          {frontmatter.tags.map((tag) => (
+            <a href={`/tags/${tag}`} class="tag">#{tag}</a>
+          ))}
+        </div>
+      )}
+      
+      <h1 class="post-title">{frontmatter.title}</h1>
+      
+      <div class="post-meta">
+        <span class="date">
+          📅 {new Date(frontmatter.pubDate).toLocaleDateString('zh-TW')}
+        </span>
+        {frontmatter.author && (
+          <span class="author">👤 {frontmatter.author}</span>
+        )}
+      </div>
+    </header>
+
+    {/* 封面圖 */}
+    {frontmatter.image && (
+      <div class="post-cover">
+        <img 
+          src={frontmatter.image.url || frontmatter.image} 
+          alt={frontmatter.image.alt || frontmatter.title} 
+        />
+      </div>
+    )}
+
+    {/* 文章正文 */}
+    <div class="post-content prose">
+      <slot />
+    </div>
+
+    {/* ★★★ 推薦文章區塊 (自動抓取相關內容) ★★★ */}
+    <RelatedPosts 
+      currentTags={frontmatter.tags || []} 
+      currentUrl={url} 
+    />
+
+  </article>
+
+</BaseLayout>
+
+<style>
+  .blog-post-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+
+  .post-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .tags {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .tag {
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 0.2rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .tag:hover {
+    background-color: #e0e7ff;
+    color: #4f39fa;
+  }
+
+  .post-title {
+    font-size: 2.5rem;
+    color: #111;
+    margin-bottom: 1rem;
+    line-height: 1.3;
+  }
+
+  .post-meta {
+    color: #666;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+  }
+
+  .post-cover {
+    margin-bottom: 3rem;
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+
+  .post-cover img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* 簡單的排版樣式，您可以根據需要調整 */
+  .post-content {
+    line-height: 1.8;
+    color: #333;
+    font-size: 1.1rem;
+  }
+  
+  /* 讓文章內的圖片也自適應 */
+  .post-content :global(img) {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+
+  @media (max-width: 768px) {
+    .post-title { font-size: 1.8rem; }
+  }
+
+  .post-content :global(iframe) {
+  width: 100%;           /* 強制寬度跟隨手機螢幕縮放 */
+  max-width: 100%;
+  aspect-ratio: 16 / 9;  /* 關鍵！自動計算高度，保持 16:9 完美比例 */
+  height: auto;          
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+* **:global(iframe)**：因為 `iframe` 是您在 Markdown 裡面寫的 HTML，Astro 預設樣式抓不到它，所以要用 `:global`。
+* **aspect-ratio: 16 / 9**：這是現代 CSS 的魔法屬性，它會自動確保影片不管寬度變多少，高度都會自動調整成 16:9，不會變形也不會留黑邊。
+</style>

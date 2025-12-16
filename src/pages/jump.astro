@@ -1,0 +1,496 @@
+---
+// src/pages/jump.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const pageTitle = "異世界傳送門｜Jump";
+---
+
+<BaseLayout pageTitle={pageTitle}>
+  
+  {/* ★★★ 新增：R-18 警告彈窗 (與首頁一致) ★★★ */}
+  <div id="age-gate" class="age-gate-overlay">
+    <div class="age-gate-box">
+      <div class="warning-icon">🔞</div>
+      <h2>未滿 18 歲禁止進入</h2>
+      <p>
+        本站包含成人內容 (R-18)。<br>
+        如果您未滿 18 歲，或您當地的法律禁止瀏覽此類內容，請立即離開。
+      </p>
+      <div class="gate-buttons">
+        <a href="https://www.google.com" class="btn btn-leave">離開</a>
+        <button id="enter-btn" class="btn btn-enter">我已滿 18 歲，進入</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="jump-container">
+    
+    <div class="header-section">
+      <h1>🚀 異世界傳送門</h1>
+      <p>輸入神秘代碼 (ID)，自動偵測傳送座標。</p>
+    </div>
+
+    {/* 輸入區域 */}
+    <div class="input-section">
+      <input 
+        type="text" 
+        id="magic-number" 
+        placeholder="請輸入神秘代碼 (例如: 228922 或 RJ...)"
+        autocomplete="off"
+      />
+      <p id="suggestion-text" class="suggestion-text"></p>
+    </div>
+
+    {/* 傳送按鈕網格 */}
+    <div class="portal-grid">
+      
+      {/* nHentai */}
+      <button class="portal-card nhentai" data-site="nhentai">
+        <div class="icon">N</div>
+        <h3>nHentai</h3>
+        <p>直連 /g/{'{id}'}</p>
+      </button>
+
+      {/* JMComic 禁漫天堂 */}
+      <button class="portal-card jmcomic" data-site="jmcomic">
+        <div class="icon">JM</div>
+        <h3>JMComic 禁漫</h3>
+        <p>直連 /album/{'{id}'}</p>
+      </button>
+
+      {/* WNacg 紳士漫畫 */}
+      <button class="portal-card wnacg" data-site="wnacg">
+        <div class="icon">WN</div>
+        <h3>WNacg 紳士</h3>
+        <p>直連 aid-{'{id}'}</p>
+      </button>
+
+      {/* E-Hentai */}
+      <button class="portal-card ehentai" data-site="ehentai">
+        <div class="icon">EH</div>
+        <h3>E-Hentai</h3>
+        <p>搜尋 gid:{'{id}'}</p>
+      </button>
+
+      {/* ExHentai */}
+      <button class="portal-card exhentai" data-site="exhentai">
+        <div class="icon">EX</div>
+        <h3>ExHentai</h3>
+        <p>需登入 / 搜尋</p>
+      </button>
+
+      {/* DLsite */}
+      <button class="portal-card dlsite" data-site="dlsite">
+        <div class="icon">DL</div>
+        <h3>DLsite</h3>
+        <p>RJ / BJ 號搜尋</p>
+      </button>
+
+      {/* Hanime1 */}
+      <button class="portal-card hanime1" data-site="hanime1">
+        <div class="icon">H1</div>
+        <h3>Hanime1</h3>
+        <p>直連 /watch?v={'{id}'}</p>
+      </button>
+
+      {/* Pixiv */}
+      <button class="portal-card pixiv" data-site="pixiv">
+        <div class="icon">P</div>
+        <h3>Pixiv</h3>
+        <p>直連 artworks/{'{id}'}</p>
+      </button>
+
+    </div>
+
+    <div class="tips">
+      <p>💡 提示：輸入數字後，系統會自動高亮可能的網站。</p>
+      <p>E-Hentai 由於機制限制，將執行 GID 搜尋。</p>
+    </div>
+
+  </div>
+
+</BaseLayout>
+
+<script>
+  // --- ★★★ Age Gate 驗證邏輯 (與首頁共用 localStorage) ★★★ ---
+  const ageGate = document.getElementById('age-gate');
+  const enterBtn = document.getElementById('enter-btn');
+  
+  const isVerified = localStorage.getItem('snowc_age_verified');
+
+  if (isVerified === 'true') {
+    if (ageGate) ageGate.style.display = 'none';
+  } else {
+    document.body.style.overflow = 'hidden'; // 禁止滾動
+  }
+
+  if (enterBtn && ageGate) {
+    enterBtn.addEventListener('click', () => {
+      localStorage.setItem('snowc_age_verified', 'true'); // 寫入驗證紀錄
+      ageGate.style.opacity = '0';
+      document.body.style.overflow = 'auto'; // 恢復滾動
+      setTimeout(() => {
+        ageGate.style.display = 'none';
+      }, 500);
+    });
+  }
+
+  // --- 原有的 Jump 功能邏輯 ---
+  const input = document.getElementById('magic-number') as HTMLInputElement;
+  const suggestionText = document.getElementById('suggestion-text') as HTMLElement;
+  const buttons = document.querySelectorAll('.portal-card');
+
+  const getUrl = (site: string, id: string) => {
+    switch (site) {
+      case 'nhentai':
+        return `https://nhentai.net/g/${id}/`;
+      case 'jmcomic':
+        return `https://18comic.vip/album/${id}`;
+      case 'wnacg':
+        return `https://www.wnacg.com/photos-index-aid-${id}.html`;
+      case 'ehentai':
+        return `https://e-hentai.org/?f_search=gid:${id}`;
+      case 'exhentai':
+        return `https://exhentai.org/?f_search=gid:${id}`;
+      case 'dlsite':
+        const dlId = id.toString().toUpperCase().match(/^(RJ|BJ)/) ? id : `RJ${id}`;
+        return `https://www.dlsite.com/home/work/=/product_id/${dlId}.html`;
+      case 'hanime1':
+        return `https://hanime1.me/watch?v=${id}`;
+      case 'pixiv':
+        return `https://www.pixiv.net/artworks/${id}`;
+      default:
+        return '#';
+    }
+  };
+
+  const updateSuggestions = (val: string) => {
+    buttons.forEach(btn => btn.classList.remove('recommended'));
+    
+    if (suggestionText) {
+      suggestionText.textContent = '';
+      suggestionText.classList.remove('visible');
+    }
+
+    if (!val) return;
+
+    const isNum = /^\d+$/.test(val);
+    const isDLsiteCode = /^(RJ|BJ)/i.test(val);
+    const len = val.length;
+    
+    let hintMessage = "";
+    let targetSites: string[] = [];
+
+    if (isDLsiteCode) {
+      targetSites = ['dlsite'];
+      hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
+    } else if (isNum) {
+      
+      if (len <= 6) {
+        // --- 6 位數以下 ---
+        targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
+        
+        if (len >= 5) {
+          targetSites.push('hanime1');
+        }
+
+        if (len >= 3) {
+          targetSites.push('pixiv');
+        }
+
+        if (len === 6) {
+          targetSites.push('dlsite');
+          hintMessage = `輸入為 ${len} 位數字，可能為各類本子站 / EH / EX / Pixiv / DLsite / Hanime1`;
+        } else if (len === 5) {
+          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv / Hanime1`;
+        } else if (len >= 3) {
+          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv`;
+        } else {
+          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX`;
+        }
+
+      } else if (len === 7) {
+        // --- 7 位數 ---
+        targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
+        hintMessage = `輸入為 ${len} 位數字，可能是 禁漫 / EH / EX / DLsite / Pixiv`;
+
+      } else if (len === 8) {
+        // --- 8 位數 ---
+        targetSites = ['dlsite', 'pixiv'];
+        hintMessage = `輸入為 ${len} 位數字，可能是 DLsite / Pixiv`;
+
+      } else if (len === 9) {
+        // --- 9 位數 ---
+        targetSites = ['pixiv'];
+        hintMessage = `輸入為 ${len} 位數字，可能是 Pixiv`;
+      } else {
+        // --- 10 位數以上 ---
+        targetSites = [];
+        hintMessage = `輸入為 ${len} 位數字`;
+      }
+    }
+
+    if (targetSites.length > 0) {
+      targetSites.forEach((site) => {
+        const btn = document.querySelector(`.portal-card[data-site="${site}"]`);
+        btn?.classList.add('recommended');
+      });
+      
+      if (suggestionText) {
+        suggestionText.textContent = `💡 ${hintMessage}`;
+        suggestionText.classList.add('visible');
+      }
+    }
+  };
+
+  input?.addEventListener('input', (e) => {
+    const val = (e.target as HTMLInputElement).value.trim();
+    updateSuggestions(val);
+  });
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!input) return;
+      const id = input.value.trim();
+      const site = btn.getAttribute('data-site') || '';
+
+      if (!id) {
+        alert('請先輸入神秘代碼！(｀･ω･´)');
+        input.focus();
+        input.classList.add('shake');
+        setTimeout(() => input.classList.remove('shake'), 500);
+        return;
+      }
+
+      const targetUrl = getUrl(site, id);
+      window.open(targetUrl, '_blank');
+    });
+  });
+
+  input?.addEventListener('keypress', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const id = input.value.trim();
+      if (id) {
+        const recommendedBtn = document.querySelector('.portal-card.recommended');
+        const site = recommendedBtn ? recommendedBtn.getAttribute('data-site') || 'nhentai' : 'nhentai';
+        const targetUrl = getUrl(site, id);
+        window.open(targetUrl, '_blank');
+      }
+    }
+  });
+</script>
+
+<style>
+  /* --- ★★★ 新增：Age Gate CSS (從 index.astro 複製) ★★★ --- */
+  .age-gate-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s;
+  }
+
+  .age-gate-box {
+    background: #1a1a1a;
+    padding: 3rem;
+    border-radius: 1rem;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 1px solid #333;
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
+  }
+
+  .warning-icon { font-size: 4rem; margin-bottom: 1rem; }
+  
+  .age-gate-box h2 { 
+    color: #ec4899;
+    font-size: 2rem; 
+    margin-bottom: 1rem; 
+  }
+  
+  .age-gate-box p { 
+    color: #ccc; 
+    line-height: 1.6; 
+    margin-bottom: 2rem; 
+  }
+
+  .gate-buttons { display: flex; gap: 1rem; justify-content: center; }
+  
+  .btn-enter {
+    background: #ec4899;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    font-weight: bold;
+  }
+  .btn-enter:hover { background: #db2777; }
+  
+  .btn-leave {
+    background: #333;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  .btn-leave:hover { background: #444; }
+
+  /* --- 原有的 Jump CSS --- */
+  .jump-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+    text-align: center;
+  }
+
+  .header-section h1 {
+    font-size: 2.5rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+  
+  .header-section p {
+    color: #666;
+    margin-bottom: 3rem;
+  }
+
+  .input-section {
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  #magic-number {
+    width: 100%;
+    max-width: 500px;
+    padding: 1rem 1.5rem;
+    font-size: 1.5rem;
+    border: 3px solid #ec4899;
+    border-radius: 50px;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+    background: #fff0f5;
+    color: #be185d;
+    font-family: monospace;
+    letter-spacing: 1px;
+  }
+
+  #magic-number:focus {
+    box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2);
+    background: white;
+  }
+
+  #magic-number::placeholder {
+    color: #fda4af;
+    font-size: 1.1rem;
+    letter-spacing: 0;
+    font-family: system-ui, sans-serif;
+  }
+
+  .suggestion-text {
+    height: 1.5rem;
+    margin-top: 1rem;
+    color: #ec4899;
+    font-weight: bold;
+    font-size: 0.95rem;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .suggestion-text.visible { opacity: 1; }
+
+  .portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+  }
+
+  .portal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    background: white;
+    border: 2px solid #eee;
+    border-radius: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    opacity: 0.8;
+  }
+
+  .portal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(236, 72, 153, 0.2);
+    opacity: 1;
+    border-color: #ec4899;
+  }
+
+  .portal-card.recommended {
+    border-color: #ec4899;
+    background-color: #fff0f5;
+    opacity: 1;
+    box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+    transform: translateY(-3px);
+  }
+  
+  .portal-card.recommended .icon {
+    background: #ec4899;
+    color: white;
+  }
+  
+  .portal-card:hover .icon {
+    background: #ec4899;
+    color: white;
+  }
+
+  .portal-card:active {
+    transform: scale(0.95);
+  }
+
+  .icon {
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 0.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #f3f4f6;
+    color: #555;
+    transition: all 0.2s;
+  }
+
+  h3 { margin: 0.5rem 0 0.2rem 0; font-size: 1.1rem; }
+  p { margin: 0; font-size: 0.8rem; color: #888; }
+
+  .tips {
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #666;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+  .shake {
+    animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    border-color: #ef4444 !important;
+  }
+</style>

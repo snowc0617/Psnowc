@@ -1,0 +1,173 @@
+---
+// src/components/RelatedPosts.astro
+
+interface Props {
+  currentTags: string[];
+  currentUrl: string;
+}
+
+const { currentTags, currentUrl } = Astro.props;
+
+// 1. 抓取所有內容
+const allPosts = await Astro.glob('../pages/posts/*.md');
+const allReviews = await Astro.glob('../pages/reviews/*.md');
+const allContent = [...allPosts, ...allReviews];
+
+// 2. 篩選與排序邏輯
+const relatedPosts = allContent
+  .filter((post) => {
+    const postUrl = (post.url || '').replace(/\/$/, '');
+    const myUrl = (currentUrl || '').replace(/\/$/, '');
+    return postUrl !== myUrl;
+  })
+  .map((post) => {
+    let rawTags = post.frontmatter.tags;
+    if (typeof rawTags === 'string') rawTags = [rawTags];
+    const postTags: string[] = Array.isArray(rawTags) ? rawTags : [];
+    
+    let safeCurrentTags = currentTags;
+    if (typeof safeCurrentTags === 'string') safeCurrentTags = [safeCurrentTags];
+    if (!Array.isArray(safeCurrentTags)) safeCurrentTags = [];
+
+    const intersection = postTags.filter((tag: string) => safeCurrentTags.includes(tag));
+    
+    return {
+      ...post,
+      matchCount: intersection.length,
+    };
+  })
+  .filter((post) => post.matchCount > 0)
+  .sort((a, b) => {
+    if (b.matchCount !== a.matchCount) return b.matchCount - a.matchCount;
+    return new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf();
+  })
+  .slice(0, 4); // ★★★ 修改：改為顯示 4 篇 ★★★
+
+if (relatedPosts.length === 0) {
+  return null;
+}
+---
+
+<div class="related-section">
+  <div class="section-header">
+    <h3>猜你喜歡 ✨</h3>
+    <span class="line"></span>
+  </div>
+
+  <div class="related-grid">
+    {relatedPosts.map((post) => (
+      <a href={post.url} class="related-card">
+        <div class="image-box">
+          {/* ★★★ 修改：加入 loading="lazy" 與 decoding="async" ★★★ */}
+          <img 
+            src={post.frontmatter.image?.url || post.frontmatter.image?.src || post.frontmatter.image || "/default-og.png"} 
+            alt={post.frontmatter.title}
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="content-box">
+          <h4>{post.frontmatter.title}</h4>
+          <p class="date">{new Date(post.frontmatter.pubDate).toISOString().slice(0, 10)}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .related-section {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid #eee;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+  }
+
+  .section-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #2b2d42;
+    white-space: nowrap;
+  }
+
+  .section-header .line {
+    height: 2px;
+    background-color: #f0f0f0;
+    width: 100%;
+    border-radius: 2px;
+  }
+
+  .related-grid {
+    display: grid;
+    /* auto-fit 會自動根據螢幕寬度排列 */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .related-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .related-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  }
+
+  /* 16:9 比例鎖定 */
+  .image-box {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background-color: #eee;
+  }
+
+  .image-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .content-box {
+    padding: 1rem;
+  }
+
+  .content-box h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: #333;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .related-card:hover h4 {
+    color: #4f39fa;
+  }
+
+  .date {
+    font-size: 0.8rem;
+    color: #999;
+    margin: 0;
+  }
+  
+  @media (max-width: 600px) {
+    .related-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

@@ -1,0 +1,114 @@
+---
+// src/pages/404.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const pageTitle = "404 找不到頁面";
+---
+
+<BaseLayout pageTitle={pageTitle}>
+  <div class="error-container">
+    <div class="content">
+      <h1 class="error-code text-gradient">404</h1>
+      <h2 class="error-title">阿勒？這裡什麼都沒有...</h2>
+      <p class="error-desc">
+        看來你輸入了一個不存在的神秘代碼，<br>
+        或者是誤入了時空的裂縫。
+      </p>
+      
+      <div class="action-buttons">
+        <a href="/" class="btn btn-primary">回到首頁</a>
+        <a href="/jump" class="btn btn-secondary">前往傳送門</a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 4rem 1rem;
+    min-height: 60vh; /* 讓內容稍微置中一點 */
+  }
+
+  .content {
+    max-width: 600px;
+  }
+
+  /* 巨大的 404 字樣 */
+  .error-code {
+    font-size: 8rem;
+    font-weight: 900;
+    line-height: 1;
+    margin: 0;
+    
+    /* 粉紫漸層文字 (與首頁風格一致) */
+    background-image: linear-gradient(45deg, #ec4899, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200%;
+    animation: gradientMove 3s infinite alternate;
+  }
+
+  .error-title {
+    font-size: 2rem;
+    color: #333;
+    margin: 1rem 0;
+    font-weight: 700;
+  }
+
+  .error-desc {
+    color: #666;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 3rem;
+  }
+
+  /* 按鈕群組 */
+  .action-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.8rem 2rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-size: 1rem;
+  }
+
+  .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .btn-primary {
+    background: #ec4899;
+    color: white;
+    box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
+  }
+
+  .btn-secondary {
+    background: #f3f4f6;
+    color: #333;
+    border: 1px solid #ddd;
+  }
+
+  /* 漸層動畫 */
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+  }
+
+  /* 手機版調整 */
+  @media (max-width: 600px) {
+    .error-code { font-size: 6rem; }
+    .error-title { font-size: 1.5rem; }
+  }
+</style>
