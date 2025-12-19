@@ -1,0 +1,125 @@
+---
+// src/components/AgeGate.astro
+---
+
+<div id="age-gate" class="age-gate-overlay" style="display: none;">
+  <div class="age-gate-box">
+    <div class="warning-icon">🔞</div>
+    <h2>未滿 18 歲禁止進入</h2>
+    <p>
+      本站包含成人內容 (R-18)。<br>
+      如果您未滿 18 歲，或您當地的法律禁止瀏覽此類內容，請立即離開。
+    </p>
+    <div class="gate-buttons">
+      <a href="https://www.google.com" class="btn btn-leave">離開</a>
+      <button id="enter-btn" class="btn btn-enter">我已滿 18 歲，進入</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // 檢查瀏覽器是否已驗證
+  const checkAge = () => {
+    const isVerified = localStorage.getItem('snowc_age_verified');
+    const ageGate = document.getElementById('age-gate');
+    
+    if (isVerified !== 'true') {
+      // 沒驗證過：顯示彈窗，並鎖定滾動
+      if (ageGate) ageGate.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // 已驗證過：確保隱藏
+      if (ageGate) ageGate.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+  };
+
+  // 初始化檢查
+  checkAge();
+
+  // 處理 View Transitions (如果有用的話，換頁也要檢查)
+  document.addEventListener('astro:page-load', checkAge);
+
+  // 綁定按鈕事件
+  const enterBtn = document.getElementById('enter-btn');
+  const ageGate = document.getElementById('age-gate');
+
+  if (enterBtn && ageGate) {
+    enterBtn.addEventListener('click', () => {
+      // 設定驗證狀態
+      localStorage.setItem('snowc_age_verified', 'true');
+      
+      // 動畫隱藏
+      ageGate.style.opacity = '0';
+      document.body.style.overflow = 'auto'; // 恢復滾動
+      
+      setTimeout(() => {
+        ageGate.style.display = 'none';
+      }, 500);
+    });
+  }
+</script>
+
+<style>
+  .age-gate-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 99999; /* 確保在最上層 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.5s;
+  }
+
+  .age-gate-box {
+    background: #1a1a1a;
+    padding: 3rem;
+    border-radius: 1rem;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    border: 1px solid #333;
+    box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
+  }
+
+  .warning-icon { font-size: 4rem; margin-bottom: 1rem; }
+  
+  .age-gate-box h2 { 
+    color: #ec4899;
+    font-size: 2rem; 
+    margin-bottom: 1rem; 
+  }
+  
+  .age-gate-box p { 
+    color: #ccc; 
+    line-height: 1.6; 
+    margin-bottom: 2rem; 
+  }
+
+  .gate-buttons { display: flex; gap: 1rem; justify-content: center; }
+  
+  .btn-enter {
+    background: #ec4899;
+    color: white;
+    border: none;
+    cursor: pointer;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  .btn-enter:hover { background: #db2777; }
+  
+  .btn-leave {
+    background: #333;
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  .btn-leave:hover { background: #444; }
+</style>
