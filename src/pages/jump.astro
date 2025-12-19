@@ -19,7 +19,7 @@ const pageTitle = "異世界傳送門｜Jump";
       <input 
         type="text" 
         id="magic-number" 
-        placeholder="請輸入神秘代碼 (例如: 593739 或 RJ...)"
+        placeholder="請輸入神秘代碼 (例如: 228922 或 RJ...)"
         autocomplete="off"
       />
       <p id="suggestion-text" class="suggestion-text"></p>
@@ -184,46 +184,33 @@ const pageTitle = "異世界傳送門｜Jump";
       } else if (isNum) {
         
         if (len <= 6) {
-          // --- 6 位數以下 (nHentai / 禁漫 / 紳士 / EH / EX) ---
-          // 這些是基礎款，所有 6 位數以下的數字都會觸發
           targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
-          
-          if (len >= 5) {
-            targetSites.push('hanime1');
-          }
-
-          if (len >= 3) {
-            targetSites.push('pixiv');
-          }
+          if (len >= 5) targetSites.push('hanime1');
+          if (len >= 3) targetSites.push('pixiv');
 
           if (len === 6) {
             targetSites.push('dlsite');
-            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv / DLsite / Hanime1`;
+            hintMessage = `輸入為 ${len} 位數字，可能為各類本子站 / EH / EX / Pixiv / DLsite / Hanime1`;
           } else if (len === 5) {
-            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv / Hanime1`;
+            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv / Hanime1`;
           } else if (len >= 3) {
-            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv`;
+            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv`;
           } else {
-            // 2 位數、1 位數
-            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX`;
+            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX`;
           }
 
         } else if (len === 7) {
-          // --- 7 位數 ---
           targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
           hintMessage = `輸入為 ${len} 位數字，可能是 禁漫 / EH / EX / DLsite / Pixiv`;
 
         } else if (len === 8) {
-          // --- 8 位數 ---
           targetSites = ['dlsite', 'pixiv'];
           hintMessage = `輸入為 ${len} 位數字，可能是 DLsite / Pixiv`;
 
         } else if (len === 9) {
-          // --- 9 位數 ---
           targetSites = ['pixiv'];
           hintMessage = `輸入為 ${len} 位數字，可能是 Pixiv`;
         } else {
-          // --- 10 位數以上 ---
           targetSites = [];
           hintMessage = `輸入為 ${len} 位數字`;
         }
@@ -302,14 +289,19 @@ const pageTitle = "異世界傳送門｜Jump";
     margin-bottom: 3rem;
   }
 
+  /* ★★★ 修正：設定 max-width 為 100% 避免超出容器 ★★★ */
   .input-section {
     margin-bottom: 2rem;
     position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   #magic-number {
     width: 100%;
-    max-width: 500px;
+    max-width: 500px; /* 保持最大寬度限制 */
     padding: 1rem 1.5rem;
     font-size: 1.5rem;
     border: 3px solid #ec4899;
@@ -321,6 +313,7 @@ const pageTitle = "異世界傳送門｜Jump";
     color: #be185d;
     font-family: monospace;
     letter-spacing: 1px;
+    box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
   }
 
   #magic-number:focus {
@@ -333,6 +326,17 @@ const pageTitle = "異世界傳送門｜Jump";
     font-size: 1.1rem;
     letter-spacing: 0;
     font-family: system-ui, sans-serif;
+  }
+
+  /* 手機版字體縮小 */
+  @media (max-width: 600px) {
+    #magic-number {
+      font-size: 1.2rem;
+      padding: 0.8rem 1rem;
+    }
+    #magic-number::placeholder {
+      font-size: 0.9rem;
+    }
   }
 
   .suggestion-text {
