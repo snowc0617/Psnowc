@@ -6,7 +6,7 @@ description: '這是紳士站的第一篇文章，象徵著新的開始。'
 author: 'Snowc'
 image:
     url:  'https://www.google.com/search?q=https://via.placeholder.com/800x400%3Ftext%3DWelcome' 
-tags: ["其他"]
+tags: ["其他","同人誌","H"]
 ---
 
 歡迎來到 P.SnowcNEWS

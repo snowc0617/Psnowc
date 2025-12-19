@@ -7,7 +7,6 @@ const pageTitle = "異世界傳送門｜Jump";
 
 <BaseLayout pageTitle={pageTitle}>
   
-
   <div class="jump-container">
     
     <div class="header-section">
@@ -97,30 +96,6 @@ const pageTitle = "異世界傳送門｜Jump";
 </BaseLayout>
 
 <script>
-  // --- ★★★ Age Gate 驗證邏輯 (與首頁共用 localStorage) ★★★ ---
-  const ageGate = document.getElementById('age-gate');
-  const enterBtn = document.getElementById('enter-btn');
-  
-  const isVerified = localStorage.getItem('snowc_age_verified');
-
-  if (isVerified === 'true') {
-    if (ageGate) ageGate.style.display = 'none';
-  } else {
-    document.body.style.overflow = 'hidden'; // 禁止滾動
-  }
-
-  if (enterBtn && ageGate) {
-    enterBtn.addEventListener('click', () => {
-      localStorage.setItem('snowc_age_verified', 'true'); // 寫入驗證紀錄
-      ageGate.style.opacity = '0';
-      document.body.style.overflow = 'auto'; // 恢復滾動
-      setTimeout(() => {
-        ageGate.style.display = 'none';
-      }, 500);
-    });
-  }
-
-  // --- 原有的 Jump 功能邏輯 ---
   const input = document.getElementById('magic-number') as HTMLInputElement;
   const suggestionText = document.getElementById('suggestion-text') as HTMLElement;
   const buttons = document.querySelectorAll('.portal-card');
@@ -149,83 +124,126 @@ const pageTitle = "異世界傳送門｜Jump";
     }
   };
 
-  const updateSuggestions = (val: string) => {
-    buttons.forEach(btn => btn.classList.remove('recommended'));
-    
-    if (suggestionText) {
-      suggestionText.textContent = '';
-      suggestionText.classList.remove('visible');
-    }
+  const animateGrid = (updateFn: () => void) => {
+    const firstPositions = new Map<Element, DOMRect>();
+    buttons.forEach(btn => firstPositions.set(btn, btn.getBoundingClientRect()));
 
-    if (!val) return;
+    updateFn();
 
-    const isNum = /^\d+$/.test(val);
-    const isDLsiteCode = /^(RJ|BJ)/i.test(val);
-    const len = val.length;
-    
-    let hintMessage = "";
-    let targetSites: string[] = [];
-
-    if (isDLsiteCode) {
-      targetSites = ['dlsite'];
-      hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
-    } else if (isNum) {
+    buttons.forEach(btn => {
+      const first = firstPositions.get(btn);
+      const last = btn.getBoundingClientRect();
       
-      if (len <= 6) {
-        // --- 6 位數以下 ---
-        targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
+      if (!first) return;
+
+      const dx = first.left - last.left;
+      const dy = first.top - last.top;
+
+      if (dx !== 0 || dy !== 0) {
+        const el = btn as HTMLElement;
+        el.style.transition = 'none';
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
         
-        if (len >= 5) {
-          targetSites.push('hanime1');
-        }
+        requestAnimationFrame(() => {
+          el.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
+          el.style.transform = '';
+        });
 
-        if (len >= 3) {
-          targetSites.push('pixiv');
-        }
-
-        if (len === 6) {
-          targetSites.push('dlsite');
-          hintMessage = `輸入為 ${len} 位數字，可能為各類本子站 / EH / EX / Pixiv / DLsite / Hanime1`;
-        } else if (len === 5) {
-          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv / Hanime1`;
-        } else if (len >= 3) {
-          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv`;
-        } else {
-          hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX`;
-        }
-
-      } else if (len === 7) {
-        // --- 7 位數 ---
-        targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
-        hintMessage = `輸入為 ${len} 位數字，可能是 禁漫 / EH / EX / DLsite / Pixiv`;
-
-      } else if (len === 8) {
-        // --- 8 位數 ---
-        targetSites = ['dlsite', 'pixiv'];
-        hintMessage = `輸入為 ${len} 位數字，可能是 DLsite / Pixiv`;
-
-      } else if (len === 9) {
-        // --- 9 位數 ---
-        targetSites = ['pixiv'];
-        hintMessage = `輸入為 ${len} 位數字，可能是 Pixiv`;
-      } else {
-        // --- 10 位數以上 ---
-        targetSites = [];
-        hintMessage = `輸入為 ${len} 位數字`;
+        el.addEventListener('transitionend', () => {
+          el.style.transition = '';
+          el.style.transform = '';
+        }, { once: true });
       }
-    }
+    });
+  };
 
-    if (targetSites.length > 0) {
-      targetSites.forEach((site) => {
-        const btn = document.querySelector(`.portal-card[data-site="${site}"]`);
-        btn?.classList.add('recommended');
+  const updateSuggestions = (val: string) => {
+    animateGrid(() => {
+      buttons.forEach(btn => {
+        btn.classList.remove('recommended');
+        (btn as HTMLElement).style.order = '0'; 
       });
       
       if (suggestionText) {
-        suggestionText.textContent = `💡 ${hintMessage}`;
-        suggestionText.classList.add('visible');
+        suggestionText.textContent = '';
+        suggestionText.classList.remove('visible');
       }
-    }
+
+      if (!val) return;
+
+      const isNum = /^\d+$/.test(val);
+      const isDLsiteCode = /^(RJ|BJ)/i.test(val);
+      const len = val.length;
+      
+      let hintMessage = "";
+      let targetSites: string[] = [];
+
+      if (isDLsiteCode) {
+        targetSites = ['dlsite'];
+        hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
+      } else if (isNum) {
+        
+        if (len <= 6) {
+          // --- 6 位數以下 (nHentai / 禁漫 / 紳士 / EH / EX) ---
+          // 這些是基礎款，所有 6 位數以下的數字都會觸發
+          targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
+          
+          if (len >= 5) {
+            targetSites.push('hanime1');
+          }
+
+          if (len >= 3) {
+            targetSites.push('pixiv');
+          }
+
+          if (len === 6) {
+            targetSites.push('dlsite');
+            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv / DLsite / Hanime1`;
+          } else if (len === 5) {
+            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv / Hanime1`;
+          } else if (len >= 3) {
+            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX / Pixiv`;
+          } else {
+            // 2 位數、1 位數
+            hintMessage = `輸入為 ${len} 位數字，可能是 nHentai / 禁漫 / 紳士 / EH / EX`;
+          }
+
+        } else if (len === 7) {
+          // --- 7 位數 ---
+          targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
+          hintMessage = `輸入為 ${len} 位數字，可能是 禁漫 / EH / EX / DLsite / Pixiv`;
+
+        } else if (len === 8) {
+          // --- 8 位數 ---
+          targetSites = ['dlsite', 'pixiv'];
+          hintMessage = `輸入為 ${len} 位數字，可能是 DLsite / Pixiv`;
+
+        } else if (len === 9) {
+          // --- 9 位數 ---
+          targetSites = ['pixiv'];
+          hintMessage = `輸入為 ${len} 位數字，可能是 Pixiv`;
+        } else {
+          // --- 10 位數以上 ---
+          targetSites = [];
+          hintMessage = `輸入為 ${len} 位數字`;
+        }
+      }
+
+      if (targetSites.length > 0) {
+        targetSites.forEach((site) => {
+          const btn = document.querySelector(`.portal-card[data-site="${site}"]`) as HTMLElement;
+          if (btn) {
+            btn.classList.add('recommended');
+            btn.style.order = '-1';
+          }
+        });
+        
+        if (suggestionText) {
+          suggestionText.textContent = `💡 ${hintMessage}`;
+          suggestionText.classList.add('visible');
+        }
+      }
+    });
   };
 
   input?.addEventListener('input', (e) => {
@@ -266,68 +284,6 @@ const pageTitle = "異世界傳送門｜Jump";
 </script>
 
 <style>
-  /* --- ★★★ 新增：Age Gate CSS (從 index.astro 複製) ★★★ --- */
-  .age-gate-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    z-index: 9999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: opacity 0.5s;
-  }
-
-  .age-gate-box {
-    background: #1a1a1a;
-    padding: 3rem;
-    border-radius: 1rem;
-    text-align: center;
-    max-width: 500px;
-    width: 90%;
-    border: 1px solid #333;
-    box-shadow: 0 0 30px rgba(236, 72, 153, 0.2);
-  }
-
-  .warning-icon { font-size: 4rem; margin-bottom: 1rem; }
-  
-  .age-gate-box h2 { 
-    color: #ec4899;
-    font-size: 2rem; 
-    margin-bottom: 1rem; 
-  }
-  
-  .age-gate-box p { 
-    color: #ccc; 
-    line-height: 1.6; 
-    margin-bottom: 2rem; 
-  }
-
-  .gate-buttons { display: flex; gap: 1rem; justify-content: center; }
-  
-  .btn-enter {
-    background: #ec4899;
-    color: white;
-    border: none;
-    cursor: pointer;
-    padding: 0.8rem 1.5rem;
-    border-radius: 999px;
-    font-weight: bold;
-  }
-  .btn-enter:hover { background: #db2777; }
-  
-  .btn-leave {
-    background: #333;
-    color: white;
-    padding: 0.8rem 1.5rem;
-    border-radius: 999px;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  .btn-leave:hover { background: #444; }
-
-  /* --- 原有的 Jump CSS --- */
   .jump-container {
     max-width: 800px;
     margin: 0 auto;
