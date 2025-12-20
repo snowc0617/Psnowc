@@ -11,15 +11,21 @@ const pageTitle = "異世界傳送門｜Jump";
     
     <div class="header-section">
       <h1>🚀 異世界傳送門</h1>
-      <p>輸入神秘代碼 (ID)，自動偵測傳送座標。</p>
+      <p>輸入代碼精準傳送，或輸入關鍵字全網搜尋。</p>
+    </div>
+
+    {/* ★★★ 新增：模式切換開關 ★★★ */}
+    <div class="mode-toggle-container">
+      <button class="mode-btn active" data-mode="id"># ID 傳送</button>
+      <button class="mode-btn" data-mode="search">🔍 關鍵字搜尋</button>
     </div>
 
     {/* 輸入區域 */}
     <div class="input-section">
       <input 
         type="text" 
-        id="magic-number" 
-        placeholder="請輸入神秘代碼 (例如: 228922 或 RJ...)"
+        id="magic-input" 
+        placeholder="請輸入神秘代碼 (例如: 350234)"
         autocomplete="off"
       />
       <p id="suggestion-text" class="suggestion-text"></p>
@@ -32,63 +38,62 @@ const pageTitle = "異世界傳送門｜Jump";
       <button class="portal-card nhentai" data-site="nhentai">
         <div class="icon">N</div>
         <h3>nHentai</h3>
-        <p>直連 /g/{'{id}'}</p>
+        <p class="desc-text" data-id-text="直連 /g/{id}" data-search-text="搜尋本子">直連 /g/{'{id}'}</p>
       </button>
 
       {/* JMComic 禁漫天堂 */}
       <button class="portal-card jmcomic" data-site="jmcomic">
         <div class="icon">JM</div>
         <h3>JMComic 禁漫</h3>
-        <p>直連 /album/{'{id}'}</p>
+        <p class="desc-text" data-id-text="直連 /album/{id}" data-search-text="搜尋漫畫">直連 /album/{'{id}'}</p>
       </button>
 
       {/* WNacg 紳士漫畫 */}
       <button class="portal-card wnacg" data-site="wnacg">
         <div class="icon">WN</div>
         <h3>WNacg 紳士</h3>
-        <p>直連 aid-{'{id}'}</p>
+        <p class="desc-text" data-id-text="直連 aid-{id}" data-search-text="搜尋漫畫">直連 aid-{'{id}'}</p>
       </button>
 
       {/* E-Hentai */}
       <button class="portal-card ehentai" data-site="ehentai">
         <div class="icon">EH</div>
         <h3>E-Hentai</h3>
-        <p>搜尋 gid:{'{id}'}</p>
+        <p class="desc-text" data-id-text="搜尋 gid:{id}" data-search-text="搜尋圖庫">搜尋 gid:{'{id}'}</p>
       </button>
 
       {/* ExHentai */}
       <button class="portal-card exhentai" data-site="exhentai">
         <div class="icon">EX</div>
         <h3>ExHentai</h3>
-        <p>需登入 / 搜尋</p>
+        <p class="desc-text" data-id-text="需登入 / 搜尋" data-search-text="搜尋 (需登入)">需登入 / 搜尋</p>
       </button>
 
       {/* DLsite */}
       <button class="portal-card dlsite" data-site="dlsite">
         <div class="icon">DL</div>
         <h3>DLsite</h3>
-        <p>RJ / BJ 號搜尋</p>
+        <p class="desc-text" data-id-text="RJ / BJ 號搜尋" data-search-text="搜尋作品">RJ / BJ 號搜尋</p>
       </button>
 
       {/* Hanime1 */}
       <button class="portal-card hanime1" data-site="hanime1">
         <div class="icon">H1</div>
         <h3>Hanime1</h3>
-        <p>直連 /watch?v={'{id}'}</p>
+        <p class="desc-text" data-id-text="直連 /watch?v={id}" data-search-text="搜尋影片">直連 /watch?v={'{id}'}</p>
       </button>
 
       {/* Pixiv */}
       <button class="portal-card pixiv" data-site="pixiv">
         <div class="icon">P</div>
         <h3>Pixiv</h3>
-        <p>直連 artworks/{'{id}'}</p>
+        <p class="desc-text" data-id-text="直連 artworks/{id}" data-search-text="搜尋插畫">直連 artworks/{'{id}'}</p>
       </button>
 
     </div>
 
     <div class="tips">
-      <p>💡 提示：輸入數字後，系統會自動高亮可能的網站。</p>
-      <p>E-Hentai 由於機制限制，將執行 GID 搜尋。</p>
+      <p id="tips-text">💡 提示：輸入數字後，系統會自動高亮可能的網站。</p>
     </div>
 
   </div>
@@ -96,59 +101,116 @@ const pageTitle = "異世界傳送門｜Jump";
 </BaseLayout>
 
 <script>
-  const input = document.getElementById('magic-number') as HTMLInputElement;
+  const input = document.getElementById('magic-input') as HTMLInputElement;
   const suggestionText = document.getElementById('suggestion-text') as HTMLElement;
   const buttons = document.querySelectorAll('.portal-card');
+  const modeBtns = document.querySelectorAll('.mode-btn');
+  const tipsText = document.getElementById('tips-text') as HTMLElement;
+  
+  // 狀態變數：目前是 'id' 模式還是 'search' 模式
+  let currentMode = 'id'; 
 
-  const getUrl = (site: string, id: string) => {
-    switch (site) {
-      case 'nhentai':
-        return `https://nhentai.net/g/${id}/`;
-      case 'jmcomic':
-        return `https://18comic.vip/album/${id}`;
-      case 'wnacg':
-        return `https://www.wnacg.com/photos-index-aid-${id}.html`;
-      case 'ehentai':
-        return `https://e-hentai.org/?f_search=gid:${id}`;
-      case 'exhentai':
-        return `https://exhentai.org/?f_search=gid:${id}`;
-      case 'dlsite':
-        const dlId = id.toString().toUpperCase().match(/^(RJ|BJ)/) ? id : `RJ${id}`;
-        return `https://www.dlsite.com/home/work/=/product_id/${dlId}.html`;
-      case 'hanime1':
-        return `https://hanime1.me/watch?v=${id}`;
-      case 'pixiv':
-        return `https://www.pixiv.net/artworks/${id}`;
-      default:
-        return '#';
+  // ★★★ 核心邏輯：根據模式產生不同網址 ★★★
+  const getUrl = (site: string, val: string) => {
+    // 移除前後空白
+    val = val.trim();
+
+    // 1. ID 模式 (原有的直連邏輯)
+    if (currentMode === 'id') {
+      switch (site) {
+        case 'nhentai': return `https://nhentai.net/g/${val}/`;
+        case 'jmcomic': return `https://18comic.vip/album/${val}`;
+        case 'wnacg': return `https://www.wnacg.com/photos-index-aid-${val}.html`;
+        case 'ehentai': return `https://e-hentai.org/?f_search=gid:${val}`;
+        case 'exhentai': return `https://exhentai.org/?f_search=gid:${val}`;
+        case 'dlsite':
+          const dlId = val.toString().toUpperCase().match(/^(RJ|BJ)/) ? val : `RJ${val}`;
+          return `https://www.dlsite.com/home/work/=/product_id/${dlId}.html`;
+        case 'hanime1': return `https://hanime1.me/watch?v=${val}`;
+        case 'pixiv': return `https://www.pixiv.net/artworks/${val}`;
+        default: return '#';
+      }
+    } 
+    // 2. 搜尋模式 (關鍵字搜尋邏輯)
+    else {
+      // 處理關鍵字編碼 (避免中文亂碼)
+      const q = encodeURIComponent(val);
+      switch (site) {
+        case 'nhentai': return `https://nhentai.net/search/?q=${q}`;
+        case 'jmcomic': return `https://18comic.vip/search/photos?search_query=${q}`;
+        case 'wnacg': return `https://www.wnacg.com/search/?q=${q}&f=_all&s=create_time_DESC`;
+        case 'ehentai': return `https://e-hentai.org/?f_search=${q}`;
+        case 'exhentai': return `https://exhentai.org/?f_search=${q}`;
+        case 'dlsite': return `https://www.dlsite.com/home/fsr/=/keyword/${q}`;
+        case 'hanime1': return `https://hanime1.me/search?query=${q}`;
+        case 'pixiv': return `https://www.pixiv.net/tags/${q}`;
+        default: return '#';
+      }
     }
   };
+
+  // ★★★ 切換模式邏輯 ★★★
+  modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      // 切換按鈕樣式
+      modeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // 更新狀態
+      currentMode = btn.getAttribute('data-mode') || 'id';
+      
+      // 更新 UI：輸入框 Placeholder
+      if (currentMode === 'id') {
+        input.placeholder = "請輸入神秘代碼 (例如: 177013 或 RJ...)";
+        input.value = ""; // 清空輸入
+        tipsText.innerHTML = "💡 提示：輸入數字後，系統會自動高亮可能的網站。";
+      } else {
+        input.placeholder = "請輸入關鍵字 (例如: 蔚藍檔案, 甚至是標籤...)";
+        input.value = "";
+        tipsText.innerHTML = "💡 提示：輸入關鍵字後，點擊任意按鈕即可搜尋該站點。";
+      }
+
+      // 更新 UI：按鈕下方的文字說明
+      buttons.forEach(portalBtn => {
+        const p = portalBtn.querySelector('.desc-text');
+        if (p) {
+          if (currentMode === 'id') {
+            p.textContent = p.getAttribute('data-id-text');
+          } else {
+            p.textContent = p.getAttribute('data-search-text');
+          }
+        }
+        // 重置高亮
+        portalBtn.classList.remove('recommended');
+        (portalBtn as HTMLElement).style.order = '0';
+      });
+
+      // 清空提示文字
+      if (suggestionText) {
+        suggestionText.textContent = '';
+        suggestionText.classList.remove('visible');
+      }
+    });
+  });
 
   const animateGrid = (updateFn: () => void) => {
     const firstPositions = new Map<Element, DOMRect>();
     buttons.forEach(btn => firstPositions.set(btn, btn.getBoundingClientRect()));
-
     updateFn();
-
     buttons.forEach(btn => {
       const first = firstPositions.get(btn);
       const last = btn.getBoundingClientRect();
-      
       if (!first) return;
-
       const dx = first.left - last.left;
       const dy = first.top - last.top;
-
       if (dx !== 0 || dy !== 0) {
         const el = btn as HTMLElement;
         el.style.transition = 'none';
         el.style.transform = `translate(${dx}px, ${dy}px)`;
-        
         requestAnimationFrame(() => {
           el.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
           el.style.transform = '';
         });
-
         el.addEventListener('transitionend', () => {
           el.style.transition = '';
           el.style.transform = '';
@@ -171,86 +233,63 @@ const pageTitle = "異世界傳送門｜Jump";
 
       if (!val) return;
 
-      const isNum = /^\d+$/.test(val);
-      const isDLsiteCode = /^(RJ|BJ)/i.test(val);
-      const len = val.length;
-      
-      let hintMessage = "";
-      let targetSites: string[] = [];
-      let possibleNames: string[] = [];
-
-      if (isDLsiteCode) {
-        targetSites = ['dlsite'];
-        hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
-      } else if (isNum) {
+      // ★★★ 只有在 ID 模式下才執行數字偵測 ★★★
+      if (currentMode === 'id') {
+        const isNum = /^\d+$/.test(val);
+        const isDLsiteCode = /^(RJ|BJ)/i.test(val);
+        const len = val.length;
         
-        if (len <= 6) {
-          // --- 6 位數以下 ---
-          // 1. 基礎本子站 (N, JM, WN, EH, EX)
-          targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
-          possibleNames = ["nHentai", "禁漫", "紳士", "EH", "EX"];
+        let hintMessage = "";
+        let targetSites: string[] = [];
+        let possibleNames: string[] = [];
+
+        if (isDLsiteCode) {
+          targetSites = ['dlsite'];
+          hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
+        } else if (isNum) {
+          if (len <= 6) {
+            targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
+            possibleNames = ["nHentai", "禁漫", "紳士", "EH", "EX"];
+            if (len >= 3) { targetSites.push('pixiv'); possibleNames.push("Pixiv"); }
+            if (len >= 5) { targetSites.push('hanime1'); possibleNames.push("Hanime1"); }
+            if (len === 6) { targetSites.push('dlsite'); possibleNames.push("DLsite"); }
+          } else if (len === 7) {
+            targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
+            possibleNames = ["禁漫", "EH", "EX", "DLsite", "Pixiv"];
+          } else if (len === 8) {
+            targetSites = ['dlsite', 'pixiv'];
+            possibleNames = ["DLsite", "Pixiv"];
+          } else if (len === 9) {
+            targetSites = ['pixiv'];
+            possibleNames = ["Pixiv"];
+          } else {
+            targetSites = [];
+            possibleNames = [];
+          }
+
+          if (possibleNames.length > 0) {
+            hintMessage = `輸入為 ${len} 位數字，可能是 ` + possibleNames.join(" / ");
+          } else {
+            hintMessage = `輸入為 ${len} 位數字`;
+          }
+        }
+
+        if (targetSites.length > 0) {
+          targetSites.forEach((site) => {
+            const btn = document.querySelector(`.portal-card[data-site="${site}"]`) as HTMLElement;
+            if (btn) {
+              btn.classList.add('recommended');
+              btn.style.order = '-1';
+            }
+          });
           
-          // 2. Pixiv (3~6)
-          if (len >= 3) {
-            targetSites.push('pixiv');
-            possibleNames.push("Pixiv");
+          if (suggestionText) {
+            suggestionText.textContent = `💡 ${hintMessage}`;
+            suggestionText.classList.add('visible');
           }
-
-          // 3. Hanime1 (5~6)
-          if (len >= 5) {
-            targetSites.push('hanime1');
-            possibleNames.push("Hanime1");
-          }
-
-          // 4. DLsite (6 only)
-          if (len === 6) {
-            targetSites.push('dlsite');
-            possibleNames.push("DLsite");
-          }
-
-        } else if (len === 7) {
-          // --- 7 位數 ---
-          targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
-          possibleNames = ["禁漫", "EH", "EX", "DLsite", "Pixiv"];
-
-        } else if (len === 8) {
-          // --- 8 位數 ---
-          targetSites = ['dlsite', 'pixiv'];
-          possibleNames = ["DLsite", "Pixiv"];
-
-        } else if (len === 9) {
-          // --- 9 位數 ---
-          targetSites = ['pixiv'];
-          possibleNames = ["Pixiv"];
-
-        } else {
-          // --- 10 位數以上 ---
-          targetSites = [];
-          possibleNames = [];
         }
-
-        // 動態生成提示文字
-        if (possibleNames.length > 0) {
-          hintMessage = `輸入為 ${len} 位數字，可能是 ` + possibleNames.join(" / ");
-        } else {
-          hintMessage = `輸入為 ${len} 位數字`;
-        }
-      }
-
-      if (targetSites.length > 0) {
-        targetSites.forEach((site) => {
-          const btn = document.querySelector(`.portal-card[data-site="${site}"]`) as HTMLElement;
-          if (btn) {
-            btn.classList.add('recommended');
-            btn.style.order = '-1';
-          }
-        });
-        
-        if (suggestionText) {
-          suggestionText.textContent = `💡 ${hintMessage}`;
-          suggestionText.classList.add('visible');
-        }
-      }
+      } 
+      // ★★★ 搜尋模式下：可以選擇不需高亮，或者高亮全部，這裡選擇不高亮，因為所有網站都能搜 ★★★
     });
   };
 
@@ -262,29 +301,36 @@ const pageTitle = "異世界傳送門｜Jump";
   buttons.forEach(btn => {
     btn.addEventListener('click', () => {
       if (!input) return;
-      const id = input.value.trim();
+      const val = input.value.trim();
       const site = btn.getAttribute('data-site') || '';
 
-      if (!id) {
-        alert('請先輸入神秘代碼！(｀･ω･´)');
+      if (!val) {
+        alert('請先輸入內容！(｀･ω･´)');
         input.focus();
         input.classList.add('shake');
         setTimeout(() => input.classList.remove('shake'), 500);
         return;
       }
 
-      const targetUrl = getUrl(site, id);
+      // 呼叫新的 getUrl，傳入當前模式
+      const targetUrl = getUrl(site, val);
       window.open(targetUrl, '_blank');
     });
   });
 
   input?.addEventListener('keypress', (e: KeyboardEvent) => {
     if (e.key === 'Enter') {
-      const id = input.value.trim();
-      if (id) {
-        const recommendedBtn = document.querySelector('.portal-card.recommended');
-        const site = recommendedBtn ? recommendedBtn.getAttribute('data-site') || 'nhentai' : 'nhentai';
-        const targetUrl = getUrl(site, id);
+      const val = input.value.trim();
+      if (val) {
+        // 如果是 ID 模式且有推薦，開推薦；否則預設 nhentai
+        // 如果是 Search 模式，預設開 nhentai 搜尋
+        let site = 'nhentai';
+        if (currentMode === 'id') {
+            const recommendedBtn = document.querySelector('.portal-card.recommended');
+            if (recommendedBtn) site = recommendedBtn.getAttribute('data-site') || 'nhentai';
+        }
+        
+        const targetUrl = getUrl(site, val);
         window.open(targetUrl, '_blank');
       }
     }
@@ -310,19 +356,44 @@ const pageTitle = "異世界傳送門｜Jump";
     margin-bottom: 3rem;
   }
 
-  /* ★★★ 修正：設定 max-width 為 100% 避免超出容器 ★★★ */
+  /* ★★★ 切換按鈕樣式 ★★★ */
+  .mode-toggle-container {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .mode-btn {
+    padding: 0.8rem 1.5rem;
+    border: 2px solid #ec4899;
+    background: transparent;
+    color: #ec4899;
+    border-radius: 50px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mode-btn:hover {
+    background: #fff0f5;
+  }
+
+  .mode-btn.active {
+    background: #ec4899;
+    color: white;
+    box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
+  }
+
   .input-section {
     margin-bottom: 2rem;
     position: relative;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
   }
 
-  #magic-number {
+  #magic-input {
     width: 100%;
-    max-width: 500px; /* 保持最大寬度限制 */
+    max-width: 500px;
     padding: 1rem 1.5rem;
     font-size: 1.5rem;
     border: 3px solid #ec4899;
@@ -334,30 +405,19 @@ const pageTitle = "異世界傳送門｜Jump";
     color: #be185d;
     font-family: monospace;
     letter-spacing: 1px;
-    box-sizing: border-box; /* 確保 padding 不會撐大寬度 */
+    box-sizing: border-box;
   }
 
-  #magic-number:focus {
+  #magic-input:focus {
     box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2);
     background: white;
   }
 
-  #magic-number::placeholder {
+  #magic-input::placeholder {
     color: #fda4af;
     font-size: 1.1rem;
     letter-spacing: 0;
     font-family: system-ui, sans-serif;
-  }
-
-  /* 手機版字體縮小 */
-  @media (max-width: 600px) {
-    #magic-number {
-      font-size: 1.2rem;
-      padding: 0.8rem 1rem;
-    }
-    #magic-number::placeholder {
-      font-size: 0.9rem;
-    }
   }
 
   .suggestion-text {
