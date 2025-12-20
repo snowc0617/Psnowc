@@ -90,6 +90,13 @@ const pageTitle = "異世界傳送門｜Jump";
         <p class="desc-text" data-id-text="直連 artworks/{id}" data-search-text="搜尋插畫">直連 artworks/{'{id}'}</p>
       </button>
 
+      {/* Hitomi (新增) */}
+      <button class="portal-card hitomi" data-site="hitomi">
+        <div class="icon">Hi</div>
+        <h3>Hitomi</h3>
+        <p class="desc-text" data-id-text="直連 /manga/{id}" data-search-text="搜尋本子">直連 /manga/{'{id}'}</p>
+      </button>
+
     </div>
 
     <div class="tips">
@@ -157,6 +164,7 @@ const pageTitle = "異世界傳送門｜Jump";
           return `https://www.dlsite.com/home/work/=/product_id/${dlId}.html`;
         case 'hanime1': return `https://hanime1.me/watch?v=${val}`;
         case 'pixiv': return `https://www.pixiv.net/artworks/${val}`;
+        case 'hitomi': return `https://hitomi.la/manga/${val}`;
         default: return '#';
       }
     } else {
@@ -170,6 +178,7 @@ const pageTitle = "異世界傳送門｜Jump";
         case 'dlsite': return `https://www.dlsite.com/home/fsr/=/keyword/${q}`;
         case 'hanime1': return `https://hanime1.me/search?query=${q}`;
         case 'pixiv': return `https://www.pixiv.net/en/search/${q}`;
+        case 'hitomi': return `https://hitomi.la/search.html?${q}`;
         default: return '#';
       }
     }
@@ -266,14 +275,14 @@ const pageTitle = "異世界傳送門｜Jump";
           hintMessage = "偵測到 DLsite 格式 (RJ/BJ號)";
         } else if (isNum) {
           if (len <= 6) {
-            targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
-            possibleNames = ["nHentai", "禁漫", "紳士", "EH", "EX"];
+            targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai', 'hitomi'];
+            possibleNames = ["nHentai", "禁漫", "紳士", "EH", "EX", 'hitomi'];
             if (len >= 3) { targetSites.push('pixiv'); possibleNames.push("Pixiv"); }
             if (len >= 5) { targetSites.push('hanime1'); possibleNames.push("Hanime1"); }
             if (len === 6) { targetSites.push('dlsite'); possibleNames.push("DLsite"); }
           } else if (len === 7) {
-            targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
-            possibleNames = ["禁漫", "EH", "EX", "DLsite", "Pixiv"];
+            targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv', 'hitomi'];
+            possibleNames = ["禁漫", "EH", "EX", "DLsite", "Pixiv", 'hitomi'];
           } else if (len === 8) {
             targetSites = ['dlsite', 'pixiv'];
             possibleNames = ["DLsite", "Pixiv"];
