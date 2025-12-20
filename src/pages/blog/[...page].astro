@@ -1,0 +1,205 @@
+---
+// src/pages/blog/[...page].astro
+// ★★★ 修正 1：改回相對路徑引用，這是最穩定的寫法 ★★★
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths({ paginate }: { paginate: any }) {
+  let allPosts: any[] = [];
+  
+  try {
+    // 嘗試抓取 ../posts (相對於 src/pages/blog/)
+    allPosts = await Astro.glob('../posts/*.md');
+  } catch (e) {
+    console.error("抓取文章失敗:", e);
+  }
+
+  allPosts.sort((a, b) => {
+    return new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf();
+  });
+
+  return paginate(allPosts, { pageSize: 6 });
+}
+
+// ★★★ 修正 2：定義 Page 的類型介面 ★★★
+interface Page {
+  data: any[];
+  start: number;
+  end: number;
+  size: number;
+  total: number;
+  currentPage: number;
+  lastPage: number;
+  url: {
+    current: string;
+    prev: string | undefined;
+    next: string | undefined;
+  };
+}
+
+// ★★★ 修正 3：明確告訴程式 Props 裡有 page，且類型是 Page ★★★
+interface Props {
+  page: Page;
+}
+
+const { page } = Astro.props;
+
+const pageTitle = "最新情報";
+---
+
+<BaseLayout pageTitle={pageTitle}>
+  <div class="header-section">
+    <h1>文章列表 📖</h1>
+    <p>這裡有最新的資訊情報或趣聞小事。</p>
+  </div>
+
+  <div class="posts-grid">
+    {/* 檢查 page.data 是否存在且長度大於 0 */}
+    {page && page.data && page.data.length > 0 ? (
+      page.data.map((post: any, index: number) => {
+        const isLCP = index < 3;
+        
+        return (
+          <div class="post-card">
+            <a href={post.url} class="card-image-link">
+              <div class="card-image">
+                 <img 
+                   src={post.frontmatter.image?.url || post.frontmatter.image?.src || post.frontmatter.image || "/default-og.png"} 
+                   alt={post.frontmatter.image?.alt || "封面圖"} 
+                   loading={isLCP ? "eager" : "lazy"}
+                   decoding="async"
+                 />
+              </div>
+            </a>
+            
+            <div class="card-content">
+              <a href={post.url} class="card-title-link">
+                <h3 class="card-title">{post.frontmatter.title}</h3>
+              </a>
+              
+              <p class="card-date">
+                {new Date(post.frontmatter.pubDate).toISOString().slice(0, 10)}
+              </p>
+              
+              <div class="tags">
+                {post.frontmatter.tags && post.frontmatter.tags.map((tag: string) => (
+                  <a href={`/tags/${tag}`} class="tag">#{tag}</a>
+                ))}
+              </div>
+
+              <p class="card-desc">
+                {post.frontmatter.description || "點擊閱讀更多..."}
+              </p>
+            </div>
+          </div>
+        );
+      })
+    ) : (
+      <div class="empty-state">
+        <p>🚧 目前還沒有任何文章，或系統正在讀取中... 🚧</p>
+      </div>
+    )}
+  </div>
+
+  {/* 分頁導航 */}
+  {page && (
+    <div class="pagination">
+      {page.url.prev ? (
+        <a href={page.url.prev} class="nav-btn prev">← 上一頁</a>
+      ) : (
+        <span class="nav-btn disabled">← 上一頁</span>
+      )}
+
+      <span class="page-count">
+        第 {page.currentPage} 頁 / 共 {page.lastPage} 頁
+      </span>
+
+      {page.url.next ? (
+        <a href={page.url.next} class="nav-btn next">下一頁 →</a>
+      ) : (
+        <span class="nav-btn disabled">下一頁 →</span>
+      )}
+    </div>
+  )}
+
+</BaseLayout>
+
+<style>
+  .header-section { margin-bottom: 2rem; text-align: center; }
+  .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 2rem; }
+  
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: #f9f9f9;
+    border-radius: 12px;
+    color: #666;
+  }
+
+  /* 卡片樣式 */
+  .post-card { 
+    background: white; 
+    border-radius: 12px; 
+    overflow: hidden; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+    color: inherit; 
+    transition: transform 0.2s, box-shadow 0.2s; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .post-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
+  
+  .card-image-link { display: block; width: 100%; height: 200px; }
+  .card-image { width: 100%; height: 100%; background-color: #eee; }
+  .card-image img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  
+  .card-content { padding: 1.5rem; display: flex; flex-direction: column; flex-grow: 1; }
+  .card-title-link { text-decoration: none; color: inherit; }
+  .card-title { margin: 0 0 0.5rem 0; font-size: 1.25rem; color: #333; line-height: 1.4; }
+  .card-title-link:hover .card-title { color: #ec4899; } /* 改為粉色系 */
+  
+  .card-date { font-size: 0.875rem; color: #888; margin-bottom: 0.5rem; }
+  
+  .tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+  .tag { background-color: #fdf2f8; color: #be185d; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; text-decoration: none; transition: background-color 0.2s; font-weight: 500; }
+  .tag:hover { background-color: #fbcfe8; color: #9d174d; }
+  
+  .card-desc { font-size: 0.95rem; color: #555; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* 分頁導航樣式 */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 4rem;
+    gap: 1.5rem;
+  }
+
+  .nav-btn {
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    background-color: white;
+    color: #ec4899;
+    text-decoration: none;
+    font-weight: bold;
+    border: 1px solid #ec4899;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover:not(.disabled) {
+    background-color: #ec4899;
+    color: white;
+  }
+
+  .nav-btn.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: #ccc;
+    color: #999;
+  }
+
+  .page-count {
+    color: #555;
+    font-weight: 500;
+  }
+</style>

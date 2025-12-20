@@ -1,0 +1,33 @@
+---
+// [功能暫停] 文章詳情頁
+// 為了避免 TypeScript 報錯與 Runtime 錯誤，目前將此頁面邏輯簡化。
+// 待未來確認資料結構與 Markdown 格式後，可再恢復原有的邏輯。
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  // 直接回傳空陣列，告訴 Astro 不要生成任何文章子頁面
+  // 這能確保即使有 .md 檔案存在，也不會觸發舊有的錯誤邏輯
+  return [];
+}
+---
+
+<BaseLayout pageTitle="維護中" pageDescription="此功能暫時停用">
+  <div class="min-h-[60vh] flex flex-col items-center justify-center text-center p-4">
+    <div class="text-6xl mb-6 opacity-80">🚧</div>
+    <h1 class="text-2xl md:text-3xl font-bold text-pink-400 mb-4">功能暫時停用</h1>
+    <p class="text-gray-400 max-w-md mx-auto mb-8">
+      文章詳情頁系統正在進行代碼結構調整。
+      <br />
+      請稍後再回來查看。
+    </p>
+    
+    <a 
+      href="/" 
+      class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-slate-800 border border-pink-500/30 text-pink-400 hover:bg-pink-500 hover:text-white transition-all duration-300"
+    >
+      <i class="fa-solid fa-house"></i>
+      <span>返回首頁</span>
+    </a>
+  </div>
+</BaseLayout>

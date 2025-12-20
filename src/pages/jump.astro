@@ -14,7 +14,7 @@ const pageTitle = "異世界傳送門｜Jump";
       <p>輸入代碼精準傳送，或輸入關鍵字全網搜尋。</p>
     </div>
 
-    {/* ★★★ 新增：模式切換開關 ★★★ */}
+    {/* 模式切換開關 */}
     <div class="mode-toggle-container">
       <button class="mode-btn active" data-mode="id"># ID 傳送</button>
       <button class="mode-btn" data-mode="search">🔍 關鍵字搜尋</button>
@@ -25,7 +25,7 @@ const pageTitle = "異世界傳送門｜Jump";
       <input 
         type="text" 
         id="magic-input" 
-        placeholder="請輸入神秘代碼 (例如: 350234)"
+        placeholder="請輸入神秘代碼 (例如: 177013)"
         autocomplete="off"
       />
       <p id="suggestion-text" class="suggestion-text"></p>
@@ -98,6 +98,39 @@ const pageTitle = "異世界傳送門｜Jump";
 
   </div>
 
+  {/* ★★★ 美化後的資訊區塊 (SEO Friendly) ★★★ */}
+  <div class="info-container">
+    
+    <div class="info-card">
+      <h3>📖 如何使用異世界傳送門？</h3>
+      <div class="info-content">
+        <p>
+          本工具專為 ACGN 愛好者設計，解決「只有號碼卻不知道是哪個網站」的困擾。
+          只需在上方輸入框貼上您獲得的神祕代碼 (ID)，系統會自動偵測可能的平台。
+          支援 <strong class="highlight">nhentai</strong>、<strong class="highlight">WNACG</strong>、<strong class="highlight">JMComic</strong>、
+          <strong class="highlight">E-Hentai/ExHentai</strong>、<strong class="highlight">Pixiv</strong> 以及 <strong class="highlight">DLsite</strong> 等主流資料庫。
+        </p>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3>❓ 常見問題 (FAQ)</h3>
+      <div class="info-content">
+        <ul class="faq-list">
+          <li>
+            <strong>Q：為什麼有些按鈕是灰色的？</strong>
+            <p>系統會根據您輸入的號碼長度與格式（例如 Pixiv ID 通常較長，RJ號包含字母），自動判斷並高亮最可能的網站，提升搜尋效率。您依然可以點擊灰色按鈕強制跳轉。</p>
+          </li>
+          <li>
+            <strong>Q：搜尋結果顯示 404 錯誤？</strong>
+            <p>這代表該平台資料庫中沒有此 ID 的本子，或該作品已被移除。建議嘗試切換到「關鍵字搜尋」模式，或點擊其他平台的按鈕進行全網搜索。</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
 </BaseLayout>
 
 <script>
@@ -107,15 +140,11 @@ const pageTitle = "異世界傳送門｜Jump";
   const modeBtns = document.querySelectorAll('.mode-btn');
   const tipsText = document.getElementById('tips-text') as HTMLElement;
   
-  // 狀態變數：目前是 'id' 模式還是 'search' 模式
   let currentMode = 'id'; 
 
-  // ★★★ 核心邏輯：根據模式產生不同網址 ★★★
   const getUrl = (site: string, val: string) => {
-    // 移除前後空白
     val = val.trim();
 
-    // 1. ID 模式 (原有的直連邏輯)
     if (currentMode === 'id') {
       switch (site) {
         case 'nhentai': return `https://nhentai.net/g/${val}/`;
@@ -130,10 +159,7 @@ const pageTitle = "異世界傳送門｜Jump";
         case 'pixiv': return `https://www.pixiv.net/artworks/${val}`;
         default: return '#';
       }
-    } 
-    // 2. 搜尋模式 (關鍵字搜尋邏輯)
-    else {
-      // 處理關鍵字編碼 (避免中文亂碼)
+    } else {
       const q = encodeURIComponent(val);
       switch (site) {
         case 'nhentai': return `https://nhentai.net/search/?q=${q}`;
@@ -143,26 +169,22 @@ const pageTitle = "異世界傳送門｜Jump";
         case 'exhentai': return `https://exhentai.org/?f_search=${q}`;
         case 'dlsite': return `https://www.dlsite.com/home/fsr/=/keyword/${q}`;
         case 'hanime1': return `https://hanime1.me/search?query=${q}`;
-        case 'pixiv': return `https://www.pixiv.net/tags/${q}`;
+        case 'pixiv': return `https://www.pixiv.net/en/search/${q}`;
         default: return '#';
       }
     }
   };
 
-  // ★★★ 切換模式邏輯 ★★★
   modeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      // 切換按鈕樣式
       modeBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // 更新狀態
       currentMode = btn.getAttribute('data-mode') || 'id';
       
-      // 更新 UI：輸入框 Placeholder
       if (currentMode === 'id') {
         input.placeholder = "請輸入神秘代碼 (例如: 177013 或 RJ...)";
-        input.value = ""; // 清空輸入
+        input.value = "";
         tipsText.innerHTML = "💡 提示：輸入數字後，系統會自動高亮可能的網站。";
       } else {
         input.placeholder = "請輸入關鍵字 (例如: 蔚藍檔案, 甚至是標籤...)";
@@ -170,7 +192,6 @@ const pageTitle = "異世界傳送門｜Jump";
         tipsText.innerHTML = "💡 提示：輸入關鍵字後，點擊任意按鈕即可搜尋該站點。";
       }
 
-      // 更新 UI：按鈕下方的文字說明
       buttons.forEach(portalBtn => {
         const p = portalBtn.querySelector('.desc-text');
         if (p) {
@@ -180,12 +201,10 @@ const pageTitle = "異世界傳送門｜Jump";
             p.textContent = p.getAttribute('data-search-text');
           }
         }
-        // 重置高亮
         portalBtn.classList.remove('recommended');
         (portalBtn as HTMLElement).style.order = '0';
       });
 
-      // 清空提示文字
       if (suggestionText) {
         suggestionText.textContent = '';
         suggestionText.classList.remove('visible');
@@ -233,7 +252,6 @@ const pageTitle = "異世界傳送門｜Jump";
 
       if (!val) return;
 
-      // ★★★ 只有在 ID 模式下才執行數字偵測 ★★★
       if (currentMode === 'id') {
         const isNum = /^\d+$/.test(val);
         const isDLsiteCode = /^(RJ|BJ)/i.test(val);
@@ -289,7 +307,6 @@ const pageTitle = "異世界傳送門｜Jump";
           }
         }
       } 
-      // ★★★ 搜尋模式下：可以選擇不需高亮，或者高亮全部，這裡選擇不高亮，因為所有網站都能搜 ★★★
     });
   };
 
@@ -312,7 +329,6 @@ const pageTitle = "異世界傳送門｜Jump";
         return;
       }
 
-      // 呼叫新的 getUrl，傳入當前模式
       const targetUrl = getUrl(site, val);
       window.open(targetUrl, '_blank');
     });
@@ -322,8 +338,6 @@ const pageTitle = "異世界傳送門｜Jump";
     if (e.key === 'Enter') {
       const val = input.value.trim();
       if (val) {
-        // 如果是 ID 模式且有推薦，開推薦；否則預設 nhentai
-        // 如果是 Search 模式，預設開 nhentai 搜尋
         let site = 'nhentai';
         if (currentMode === 'id') {
             const recommendedBtn = document.querySelector('.portal-card.recommended');
@@ -356,7 +370,7 @@ const pageTitle = "異世界傳送門｜Jump";
     margin-bottom: 3rem;
   }
 
-  /* ★★★ 切換按鈕樣式 ★★★ */
+  /* 模式切換按鈕 */
   .mode-toggle-container {
     display: flex;
     justify-content: center;
@@ -386,6 +400,7 @@ const pageTitle = "異世界傳送門｜Jump";
     box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);
   }
 
+  /* 輸入框區域 */
   .input-section {
     margin-bottom: 2rem;
     position: relative;
@@ -431,6 +446,7 @@ const pageTitle = "異世界傳送門｜Jump";
   }
   .suggestion-text.visible { opacity: 1; }
 
+  /* Grid 佈局 */
   .portal-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -508,6 +524,75 @@ const pageTitle = "異世界傳送門｜Jump";
     border-radius: 8px;
     font-size: 0.9rem;
     color: #666;
+  }
+
+  /* ★★★ 新增：美化後的資訊區塊 CSS ★★★ */
+  .info-container {
+    max-width: 800px;
+    margin: 0 auto 4rem auto; /* 與上方區隔 */
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .info-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 1rem;
+    /* 輕微粉色邊框與陰影，呼應主題 */
+    border: 1px solid #fce7f3; 
+    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    text-align: left; /* 保持文字左對齊 */
+  }
+
+  .info-card h3 {
+    color: #ec4899;
+    margin-top: 0;
+    margin-bottom: 1.2rem;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #fce7f3;
+    padding-bottom: 0.8rem;
+  }
+
+  .info-content p {
+    line-height: 1.8;
+    color: #555;
+    margin-bottom: 0;
+  }
+
+  .highlight {
+    color: #be185d;
+    background-color: #fdf2f8;
+    padding: 0 4px;
+    border-radius: 4px;
+  }
+
+  .faq-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .faq-list li {
+    margin-bottom: 1.5rem;
+  }
+  
+  .faq-list li:last-child {
+    margin-bottom: 0;
+  }
+
+  .faq-list strong {
+    display: block;
+    color: #333;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .faq-list p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95rem;
   }
 
   @keyframes shake {
