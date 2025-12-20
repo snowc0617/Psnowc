@@ -177,6 +177,7 @@ const pageTitle = "異世界傳送門｜Jump";
       
       let hintMessage = "";
       let targetSites: string[] = [];
+      let possibleNames: string[] = [];
 
       if (isDLsiteCode) {
         targetSites = ['dlsite'];
@@ -184,34 +185,54 @@ const pageTitle = "異世界傳送門｜Jump";
       } else if (isNum) {
         
         if (len <= 6) {
+          // --- 6 位數以下 ---
+          // 1. 基礎本子站 (N, JM, WN, EH, EX)
           targetSites = ['nhentai', 'jmcomic', 'wnacg', 'ehentai', 'exhentai'];
-          if (len >= 5) targetSites.push('hanime1');
-          if (len >= 3) targetSites.push('pixiv');
+          possibleNames = ["nHentai", "禁漫", "紳士", "EH", "EX"];
+          
+          // 2. Pixiv (3~6)
+          if (len >= 3) {
+            targetSites.push('pixiv');
+            possibleNames.push("Pixiv");
+          }
 
+          // 3. Hanime1 (5~6)
+          if (len >= 5) {
+            targetSites.push('hanime1');
+            possibleNames.push("Hanime1");
+          }
+
+          // 4. DLsite (6 only)
           if (len === 6) {
             targetSites.push('dlsite');
-            hintMessage = `輸入為 ${len} 位數字，可能為各類本子站 / EH / EX / Pixiv / DLsite / Hanime1`;
-          } else if (len === 5) {
-            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv / Hanime1`;
-          } else if (len >= 3) {
-            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX / Pixiv`;
-          } else {
-            hintMessage = `輸入為 ${len} 位數字，可能為本子站 / EH / EX`;
+            possibleNames.push("DLsite");
           }
 
         } else if (len === 7) {
+          // --- 7 位數 ---
           targetSites = ['jmcomic', 'ehentai', 'exhentai', 'dlsite', 'pixiv'];
-          hintMessage = `輸入為 ${len} 位數字，可能是 禁漫 / EH / EX / DLsite / Pixiv`;
+          possibleNames = ["禁漫", "EH", "EX", "DLsite", "Pixiv"];
 
         } else if (len === 8) {
+          // --- 8 位數 ---
           targetSites = ['dlsite', 'pixiv'];
-          hintMessage = `輸入為 ${len} 位數字，可能是 DLsite / Pixiv`;
+          possibleNames = ["DLsite", "Pixiv"];
 
         } else if (len === 9) {
+          // --- 9 位數 ---
           targetSites = ['pixiv'];
-          hintMessage = `輸入為 ${len} 位數字，可能是 Pixiv`;
+          possibleNames = ["Pixiv"];
+
         } else {
+          // --- 10 位數以上 ---
           targetSites = [];
+          possibleNames = [];
+        }
+
+        // 動態生成提示文字
+        if (possibleNames.length > 0) {
+          hintMessage = `輸入為 ${len} 位數字，可能是 ` + possibleNames.join(" / ");
+        } else {
           hintMessage = `輸入為 ${len} 位數字`;
         }
       }
