@@ -97,6 +97,27 @@ const pageTitle = "異世界傳送門｜Jump";
         <p class="desc-text" data-id-text="直連 /manga/{id}" data-search-text="搜尋本子">直連 /manga/{'{id}'}</p>
       </button>
 
+      {/* Rule34Video (新增 - 僅搜尋) */}
+      <button class="portal-card rule34video" data-site="rule34video">
+        <div class="icon">R34</div>
+        <h3>Rule34Vid</h3>
+        <p class="desc-text" data-id-text="❌ 不支援 ID" data-search-text="搜尋影片">❌ 不支援 ID</p>
+      </button>
+
+      {/* Iwara (新增 - 僅搜尋) */}
+      <button class="portal-card iwara" data-site="iwara">
+        <div class="icon">Iw</div>
+        <h3>Iwara</h3>
+        <p class="desc-text" data-id-text="❌ 不支援 ID" data-search-text="搜尋影片">❌ 不支援 ID</p>
+      </button>
+
+      {/* PicaWeb (新增 - 僅搜尋 + 需登入) */}
+      <button class="portal-card pica" data-site="pica">
+        <div class="icon">Pi</div>
+        <h3>PicaWeb 嗶咔</h3>
+        <p class="desc-text" data-id-text="❌ 不支援 ID" data-search-text="搜尋 (需登入)">❌ 不支援 ID /需登入</p>
+      </button>
+
     </div>
 
     <div class="tips">
@@ -179,6 +200,9 @@ const pageTitle = "異世界傳送門｜Jump";
         case 'hanime1': return `https://hanime1.me/search?query=${q}`;
         case 'pixiv': return `https://www.pixiv.net/en/search/${q}`;
         case 'hitomi': return `https://hitomi.la/search.html?${q}`;
+        case 'rule34video': return `https://rule34video.com/search/${q}/`;
+        case 'iwara': return `https://www.iwara.tv/search?query=${q}&type=videos`;
+        case 'pica': return `https://manhuabika.com/comics/search?keyword=${q}&s=dd&page=1`;
         default: return '#';
       }
     }
